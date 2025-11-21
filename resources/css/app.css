@@ -1,7 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
+@source "../views/**/*.blade.php";
+@source "../js/**/*.vue";
+@source "../js/**/*.js";
+
+/* Tu regla personalizada */
 [x-cloak] {
     display: none;
 }
