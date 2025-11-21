@@ -6,45 +6,40 @@ use {{ namespacedModel }};
 use {{ rootNamespace }}Http\Controllers\Controller;
 use {{ namespacedRequests }}
 
-class {{ class }} extends Controller
-{
+class {{ class }} extends Controller{
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
+    public function index() {
+        $Variable = null;
+        return Inertia::render('Ruta',  compact('Variable'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store({{ storeRequest }} $request)
-    {
+    public function store({{ storeRequest }} $request){
         //
     }
 
     /**
      * Display the specified resource.
      */
-    public function show({{ model }} ${{ modelVariable }})
-    {
+    public function show({{ model }} ${{ modelVariable }}){
         //
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update({{ updateRequest }} $request, {{ model }} ${{ modelVariable }})
-    {
+    public function update({{ updateRequest }} $request, {{ model }} ${{ modelVariable }}){
         //
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy({{ model }} ${{ modelVariable }})
-    {
+    public function destroy({{ model }} ${{ modelVariable }}){
         //
     }
 }

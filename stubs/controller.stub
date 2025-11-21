@@ -4,62 +4,75 @@ namespace {{ namespace }};
 
 use {{ rootNamespace }}Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 
-class {{ class }} extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+class {{ class }} extends Controller{
+
+    public function index() {
+        //$items = Model::get();
+        //return Inertia::render('Ruta/Index', compact('items'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        //
+    public function create(){
+
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
+    public function store(Request $request) {
+
+        //$validated = $request->validate([
+        //    'field1' => 'required|string|max:255',
+        //    'field2' => 'required|email|unique:table,column',
+        //]);
+
+        //Model::create([
+        //    'column' => $request->input
+        //]);
+
+        return redirect()->back()->with('success', 'Message');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        //
+    public function show(string $id){
+
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
-        //
+    public function edit(string $id){
+
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
+    public function update(Request $request, string $id) {
+        //$validated = $request->validate([
+        //    'field1' => 'required|string|max:255',
+        //    'field2' => 'required|email|unique:table,column,' . $id,
+        //]);
+
+        //Model::where('column', $id)->update([
+        //    'field1' => $validated['field1'],
+        //    'field2' => $validated['field2'],
+        //]);
+
+        return redirect()->back()->with('success', 'Message');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        //
+    public function destroy(string $id){
+        return redirect()->back()->with('success', 'Message');
     }
 }

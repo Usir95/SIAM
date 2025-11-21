@@ -2,10 +2,16 @@
 
 namespace {{ namespace }};
 
-{{ factoryImport }}
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable;
 
-class {{ class }} extends Model
-{
-    {{ factory }}
+
+class {{ class }} extends Model implements AuditableContract {
+    use HasFactory, SoftDeletes, Auditable;
+
+    protected $guarded = ['id', 'created_at', 'updated_at'];
+    protected $dates = ['deleted_at'];
 }
