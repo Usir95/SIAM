@@ -2,6 +2,20 @@
 @import "tailwindcss";
 @import url("normalize.css");
 
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Fredoka:wght@300;400;500;600;700&family=Patrick+Hand&display=swap');
+
+@theme {
+    --font-sans: 'Fredoka', 'Patrick Hand', 'Caveat', cursive, sans-serif;
+}
+
+@theme {
+    --color-app-primary: #7D2447;
+    --color-app-secondary: #4A5350;
+    --color-app-tertiary: #BFB591;
+    --color-app-accent1: #838386;
+    --color-app-accent2: #404A6E;
+    --color-app-accent3: #B5ACAF;
+}
 
 [x-cloak] {
     display: none;

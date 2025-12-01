@@ -1,4 +1,4 @@
-//tailwind.config.js
+// tailwind.config.js
 import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';
 import typography from '@tailwindcss/typography';
@@ -15,20 +15,17 @@ export default {
 
     theme: {
         extend: {
-            fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
-            },
             screens: {
                 hd: '1920px',
                 lp: '1366px',
             },
             colors: {
-                primary: '#7D2447',
-                secondary: '#4A5350',
-                tertiary: '#BFB591',
-                complement1: '#838386',
-                complement2: '#404A6E',
-                complement3: '#B5ACAF',
+                'app-primary': '#7D2447',
+                'app-secondary': '#4A5350',
+                'app-tertiary': '#BFB591',
+                'app-gray': '#838386',
+                'app-accent1': '#404A6E',
+                'app-accent2': '#B5ACAF',
             },
             fontSize: {
                 mxs: '0.666rem',
