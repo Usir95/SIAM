@@ -1,21 +1,13 @@
-<script setup lang="ts">
+<script setup>
 import { ScaleLoader } from "vue3-spinner";
-defineProps<{
-    overlay: boolean;
-}>();
+import Screen from "@/Components/LoadingScreen.vue";
+
+const props = defineProps({
+    overlay: Boolean,
+});
 </script>
 <template>
-    <v-overlay
-        opacity="80%"
-        persistent
-        :model-value="overlay"
-        class="align-center justify-center"
-    >
-        <ScaleLoader
-            :loading="overlay"
-            color="#FFA500"
-            height="80px"
-            width="30px"
-        />
+    <v-overlay opacity="65%" persistent :model-value="overlay" class="justify-center align-center">
+        <Screen :overlay="true" type="ScaleLoader" />
     </v-overlay>
 </template>
