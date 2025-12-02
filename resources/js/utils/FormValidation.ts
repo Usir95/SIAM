@@ -1,3 +1,4 @@
+// resources/js/utils/FormValidation.ts
 import { reactive } from 'vue';
 
 export interface ValidatableField {
@@ -14,7 +15,6 @@ export function useMdFormValidation() {
 
     // Registrar ref
     const setFieldRef = (name: string) => (el: any) => {
-        // solo guardamos elementos válidos
         if (el && typeof el.validate === 'function') {
             fieldRefs[name] = el as ValidatableField;
         } else {
@@ -22,19 +22,21 @@ export function useMdFormValidation() {
         }
     };
 
-    // Validacion global
+    // Validación global con logs
     const validateAll = (): boolean => {
         let allValid = true;
 
-        Object.values(fieldRefs).forEach((field) => {
+        Object.entries(fieldRefs).forEach(([name, field]) => {
             if (field && typeof field.validate === 'function') {
                 const ok = field.validate();
-                if (!ok) {
-                    allValid = false;
-                }
+                console.log(`Validando "${name}" →`, ok ? 'OK' : 'ERROR');
+                if (!ok) allValid = false;
+            } else {
+                console.log(`"${name}" no tiene método validate()`);
             }
         });
 
+        console.log('Resultado final del formulario →', allValid ? 'VÁLIDO' : 'INVÁLIDO');
         return allValid;
     };
 

@@ -27,7 +27,37 @@
                     helper="18 caracteres, solo letras y números"
                 />
 
+                <MdNumberInput
+                    :ref="setFieldRef('edad')"
+                    v-model="form.edad"
+                    label="Edad"
+                    :allowed="'number'"
+                    :min="18"
+                    :max="99"
+                    :maxLength="2"
+                    :required="true"
+                />
 
+                <!-- Decimal / dinero -->
+                <MdNumberInput
+                    :ref="setFieldRef('monto')"
+                    v-model="form.monto"
+                    label="Monto"
+                    icon="mdi-currency-usd"
+                    :allowed="'money'"
+                    :allowNegative="true"
+                    :required="true"
+                />
+
+                <!-- Negativo permitido -->
+
+                <MdNumberInput
+                    :ref="setFieldRef('saldo')"
+                    v-model="form.saldo"
+                    label="Saldo"
+                    :allowNegative="true"
+                    :required="true"
+                />
 
                 <v-btn type="submit" color="primary" block>
                     Probar validaciones
@@ -45,6 +75,7 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import MdTextInput from '@/Components/MaterialDesign/MdTextInput.vue';
+import MdNumberInput from '@/Components/MaterialDesign/MdNumberInput.vue';
 
 import { useMdFormValidation } from '@/utils/FormValidation';
 import { reactive, ref } from 'vue';
@@ -53,6 +84,9 @@ const form = reactive({
     nombre: '',
     correo: '',
     curp: '',
+    edad: null,
+    monto: null,
+    saldo: null,
 });
 
 const data = ref({});

@@ -3,6 +3,7 @@ export type AllowedType =
     | "number"
     | "decimal"
     | "negative"
+    | "negativeInt"   // 👈 NUEVO: enteros negativos
     | "money"
     | "email"
     | "phone"
@@ -47,7 +48,9 @@ export const isValidKey = (e: KeyboardEvent, type: AllowedType): boolean => {
     switch (type) {
         case "number":
             return /^[0-9]$/.test(k);
+
         case "decimal":
+        case "money": // money se comporta como decimal (sin formato especial)
             return (
                 /^[0-9.]$/.test(k) &&
                 !(
@@ -55,6 +58,7 @@ export const isValidKey = (e: KeyboardEvent, type: AllowedType): boolean => {
                     (e.target as HTMLInputElement).value.includes(".")
                 )
             );
+
         case "negative":
             return (
                 /^[0-9.-]$/.test(k) &&
@@ -64,32 +68,46 @@ export const isValidKey = (e: KeyboardEvent, type: AllowedType): boolean => {
                 ) &&
                 !(
                     k === "-" &&
-                    ((e.target as HTMLInputElement).selectionStart !== 0 ||
-                        (e.target as HTMLInputElement).value.includes("-"))
+                    (
+                        (e.target as HTMLInputElement).selectionStart !== 0 ||
+                        (e.target as HTMLInputElement).value.includes("-")
+                    )
                 )
             );
-        case "money":
+
+        case "negativeInt": // 👈 entero negativo: NO permite '.'
             return (
-                /^[0-9.]$/.test(k) &&
+                /^[0-9-]$/.test(k) &&
                 !(
-                    k === "." &&
-                    (e.target as HTMLInputElement).value.includes(".")
+                    k === "-" &&
+                    (
+                        (e.target as HTMLInputElement).selectionStart !== 0 ||
+                        (e.target as HTMLInputElement).value.includes("-")
+                    )
                 )
             );
+
         case "email":
             return /^[a-zA-Z0-9@._-]$/.test(k);
+
         case "phone":
             return /^[0-9+\-\s]$/.test(k);
+
         case "url":
             return /^[a-zA-Z0-9:/?&%._\-#=]$/.test(k);
+
         case "text":
             return /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s.]/.test(k);
+
         case "alphanumeric":
             return /[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s.]/.test(k);
+
         case "special":
             return /[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s.,:;#@!$%&()¿?'"_\-\+\/]/.test(k);
+
         case "password":
             return /[A-Za-z0-9!@#$%^&*()_+\-=.,:?]/.test(k);
+
         case "json":
         case "any":
         default:
@@ -109,9 +127,12 @@ export const sanitizeByType = (
         case "number":
             s = s.replace(/[^0-9]/g, "");
             break;
+
         case "decimal":
+        case "money":
             s = s.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
             break;
+
         case "negative":
             s = s.replace(/[^0-9.-]/g, "");
             s = s.replace(/(.*-)(.*-)/, "$1$2");
@@ -122,33 +143,46 @@ export const sanitizeByType = (
                 s = "-" + s.replace(/-/g, "");
             }
             break;
-        case "money":
-            s = s.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+
+        case "negativeInt": // 👈 entero negativo, sin puntos
+            s = s.replace(/[^0-9-]/g, "");
+            // dejar solo un '-' al inicio
+            if (s.includes("-")) {
+                s = "-" + s.replace(/-/g, "");
+            }
             break;
+
         case "email":
             s = s.replace(/[^a-zA-Z0-9@._-]/g, "");
             break;
+
         case "phone":
             s = s.replace(/[^0-9+\-\s]/g, "");
             break;
+
         case "url":
             s = s.replace(/[^a-zA-Z0-9:/?&%._\-#=]/g, "");
             break;
+
         case "text":
             s = s.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s.]/g, "");
             break;
+
         case "alphanumeric":
             s = s.replace(/[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s.]/g, "");
             break;
+
         case "special":
             s = s.replace(
                 /[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s.,:;#@!$%&()¿?'"_\-\+\/]/g,
                 ""
             );
             break;
+
         case "password":
             s = s.replace(/[^A-Za-z0-9!@#$%^&*()_+\-=.,:?]/g, "");
             break;
+
         case "json":
         case "any":
         default:
