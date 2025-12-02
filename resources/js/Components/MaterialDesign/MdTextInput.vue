@@ -6,74 +6,184 @@
             :label="label"
             :type="type"
             :prepend-inner-icon="icon"
-            :density="'compact'"
+            :density="density"
             :variant="variant"
-            :error="!!errorMessage"
-            :error-messages="errorMessage"
+            :rounded="rounded"
+            :error="!!displayedError"
+            :error-messages="displayedError"
             :clearable="clearable"
+            :maxlength="maxLength ?? undefined"
+            :counter="counter && !!maxLength"
+            :class="successClass"
+            :hint="helper"
+            :persistent-hint="!!helper"
+            :readonly="readonly"
+            :autocomplete="'off'"
+            @keydown="handleKeydown"
             @blur="handleBlur"
         />
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from 'vue';
+import {
+    toUpper,
+    isValidKey,
+    sanitizeByType,
+    type AllowedType,
+} from '@/utils/FieldUtils';
 
-const props = defineProps({
-    modelValue: {
-        type: [String, Number],
-        default: '',
-    },
-    label: {
-        type: String,
-        default: '',
-    },
-    icon: {
-        type: String,
-        default: '', // ej: 'mdi-account'
-    },
-    type: {
-        type: String,
-        default: 'text',
-    },
-    required: {
-        type: Boolean,
-        default: false,
-    },
-    variant: {
-        type: String,
-        default: 'outlined',
-    },
-    clearable: {
-        type: Boolean,
-        default: false,
-    },
+// tipos que espera Vuetify
+type Density = 'default' | 'comfortable' | 'compact';
+type Variant =
+    | 'outlined'
+    | 'filled'
+    | 'plain'
+    | 'solo'
+    | 'solo-filled'
+    | 'solo-inverted'
+    | 'underlined';
+
+type ModelValue = string | number | null | undefined;
+
+interface MdTextInputProps {
+    modelValue?: ModelValue;
+    label?: string;
+    icon?: string;
+    type?: string;
+    required?: boolean;
+    variant?: Variant;
+    clearable?: boolean;
+    uppercase?: boolean;
+    minLength?: number | null;
+    maxLength?: number | null;
+    counter?: boolean;
+    helper?: string;
+    readonly?: boolean;
+    externalError?: string;
+    allowed?: AllowedType;
+    pattern?: string | RegExp | null;
+    showSuccessState?: boolean;
+    density?: Density;
+    rounded?: boolean | string | number;
+}
+
+const props = withDefaults(defineProps<MdTextInputProps>(), {
+    modelValue: '',
+    label: '',
+    icon: '',
+    type: 'text',
+    required: false,
+    variant: 'outlined',
+    clearable: false,
+    uppercase: true,
+    minLength: null,
+    maxLength: null,
+    counter: false,
+    helper: '',
+    readonly: false,
+    externalError: '',
+    allowed: 'any',
+    pattern: null,
+    showSuccessState: true,
+    density: 'compact',
+    rounded: 'xl',
 });
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits<{
+    (e: 'update:modelValue', value: ModelValue): void;
+}>();
 
-const errorMessage = ref('');
+const errorMessage = ref<string>('');
+const touched = ref(false);
 
-// v-model interno enlazado con el padre
-const innerValue = computed({
+// v-model interno
+const innerValue = computed<ModelValue>({
     get() {
         return props.modelValue;
     },
     set(value) {
-        emit('update:modelValue', value);
+        let newValue: ModelValue = value;
+        const type: AllowedType = props.allowed ?? 'any';
+
+        if (type === 'any') {
+            if (typeof newValue === 'string') {
+                let s = newValue;
+                s = toUpper(s, props.uppercase ?? true);
+
+                if (typeof props.maxLength === 'number' && props.maxLength > 0) {
+                    s = s.slice(0, props.maxLength);
+                }
+
+                newValue = s;
+            }
+        } else {
+            newValue = sanitizeByType(
+                newValue,
+                type,
+                props.uppercase ?? true,
+                props.maxLength ?? undefined
+            );
+        }
+
+        emit('update:modelValue', newValue);
     },
 });
 
-/**
- * Valida el campo y devuelve true/false
- */
-const validate = () => {
-    if (props.required) {
-        const value = String(props.modelValue ?? '').trim();
-        const isEmpty = !value;
+const displayedError = computed<string>(() => {
+    return props.externalError || errorMessage.value;
+});
 
-        errorMessage.value = isEmpty ? 'Este campo es obligatorio' : '';
-        return !isEmpty;
+const validate = (): boolean => {
+    if (props.readonly) {
+        errorMessage.value = '';
+        return true;
+    }
+
+    touched.value = true;
+
+    const raw = props.modelValue ?? '';
+    const value = String(raw).trim();
+    const length = value.length;
+
+    if (props.required && !length) {
+        errorMessage.value = 'Este campo es obligatorio';
+        return false;
+    }
+
+    if (!length && !props.required) {
+        errorMessage.value = '';
+        return true;
+    }
+
+    if (props.minLength != null && length < props.minLength) {
+        errorMessage.value = `Debe tener al menos ${props.minLength} caracteres`;
+        return false;
+    }
+
+    if (props.maxLength != null && length > props.maxLength) {
+        errorMessage.value = `Debe tener máximo ${props.maxLength} caracteres`;
+        return false;
+    }
+
+    if (props.pattern) {
+        let regex: RegExp | null = null;
+
+        if (props.pattern instanceof RegExp) {
+            regex = props.pattern;
+        } else if (typeof props.pattern === 'string') {
+            try {
+                regex = new RegExp(props.pattern);
+            } catch {
+                regex = null;
+            }
+        }
+
+        if (regex && !regex.test(value)) {
+            errorMessage.value = 'El formato no es válido.';
+            return false;
+        }
     }
 
     errorMessage.value = '';
@@ -84,8 +194,37 @@ const handleBlur = () => {
     validate();
 };
 
-// Exponemos validate() para poder usar ref en el padre
+const handleKeydown = (e: KeyboardEvent) => {
+    const type: AllowedType = props.allowed ?? 'any';
+    if (!isValidKey(e, type)) {
+        e.preventDefault();
+    }
+};
+
+const successClass = computed<string>(() => {
+    if (!props.showSuccessState) return '';
+    if (!touched.value) return '';
+    if (displayedError.value) return '';
+    return 'md-input-success';
+});
+
 defineExpose({
     validate,
 });
 </script>
+
+<style scoped>
+.md-input-success :deep(.v-field__outline__start),
+.md-input-success :deep(.v-field__outline__notch),
+.md-input-success :deep(.v-field__outline__end) {
+    border-color: #16a34a !important;
+}
+
+.md-input-success :deep(.v-label) {
+    color: #16a34a !important;
+}
+
+.md-input-success :deep(.v-field__prepend-inner .v-icon) {
+    color: #16a34a !important;
+}
+</style>

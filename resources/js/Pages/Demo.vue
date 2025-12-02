@@ -15,13 +15,19 @@
                 />
 
                 <MdTextInput
-                    :ref="setFieldRef('correo')"
-                    v-model="form.correo"
-                    label="Correo electrónico"
-                    icon="mdi-email"
+                    :ref="setFieldRef('curp')"
+                    v-model="form.curp"
+                    label="CURP"
+                    icon="mdi-card-account-details"
                     :required="true"
-                    clearable
+                    :minLength="18"
+                    :maxLength="18"
+                    allowed="alphanumeric"
+                    :pattern="/^([A-ZÑ&]{4})(\d{2})(\d{2})(\d{2})([HM])/"
+                    helper="18 caracteres, solo letras y números"
                 />
+
+
 
                 <v-btn type="submit" color="primary" block>
                     Probar validaciones
@@ -31,7 +37,7 @@
         </section>
 
         <pre>
-{{ data }}
+            {{ data }}
         </pre>
     </AppLayout>
 </template>
@@ -39,38 +45,21 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import MdTextInput from '@/Components/MaterialDesign/MdTextInput.vue';
+
+import { useMdFormValidation } from '@/utils/FormValidation';
 import { reactive, ref } from 'vue';
 
 const form = reactive({
     nombre: '',
     correo: '',
+    curp: '',
 });
 
-// Diccionario de refs a los campos
-const fieldRefs = reactive({});
-
-// Para mostrar resultado en el <pre>
 const data = ref({});
-
-// Función para registrar cada ref
-const setFieldRef = (name) => (el) => {
-    if (el) {
-        fieldRefs[name] = el;
-    }
-};
+const { setFieldRef, validateAll } = useMdFormValidation();
 
 const handleSubmit = () => {
-    let allValid = true;
-
-    // Validar todos los campos registrados
-    Object.values(fieldRefs).forEach((field) => {
-        if (field && typeof field.validate === 'function') {
-            const ok = field.validate();
-            if (!ok) {
-                allValid = false;
-            }
-        }
-    });
+    const allValid = validateAll();
 
     if (!allValid) {
         console.log("Formulario inválido");
