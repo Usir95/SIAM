@@ -113,6 +113,14 @@
                 :required="true"
             />
 
+            <MdCheckbox
+                :ref="setFieldRef('acepta_terminos')"
+                v-model="form.acepta_terminos"
+                label="Acepto términos y condiciones"
+                color="orange-darken-3"
+                :required="true"
+            />
+
             <MdSwitch
                 :ref="setFieldRef('activo')"
                 v-model="form.activo"
@@ -155,6 +163,8 @@ import MdDatePicker from '@/Components/MaterialDesign/MdDatePicker.vue';
 import MdSelect from '@/Components/MaterialDesign/MdSelect.vue';
 import MdSelectSearch from '@/Components/MaterialDesign/MdSelectSearch.vue';
 import MdSwitch from '@/Components/MaterialDesign/MdSwitch.vue';
+import MdCheckbox from '@/Components/MaterialDesign/MdCheckbox.vue';
+
 
 import { useMdFormValidation } from '@/utils/FormValidation';
 import { reactive, ref, onMounted } from 'vue';
@@ -173,6 +183,7 @@ const form = reactive({
     fecha_simple: '',
     frutas_id: null,
     activo: false,
+    acepta_terminos: false,
 });
 
 const Frutas = ref([
