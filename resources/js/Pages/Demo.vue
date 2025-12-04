@@ -65,7 +65,7 @@
                 label="Fecha de nacimiento"
                 :required="true"
             />
-            {{ form.fecha_nacimiento }}
+
             <MdDateInput
                 :ref="setFieldRef('fecha_cita')"
                 v-model="form.fecha_cita"
@@ -74,17 +74,31 @@
                 :required="true"
             />
 
-            {{ form.fecha_cita }}
-                <MdTextarea
-                    :ref="setFieldRef('comentarios')"
-                    v-model="form.comentarios"
-                    label="Comentarios"
-                    :required="true"
-                    :minLength="10"
-                    :maxLength="30"
-                    :uppercase="true"
-                    counter
-                />
+            <MdDatePicker
+                :ref="setFieldRef('fecha_rango')"
+                v-model="form.fecha_rango"
+                label="Fecha de cita (rango)"
+                :range="true"
+                :required="true"
+            />
+                {{ form.fecha_rango }}
+            <MdDatePicker
+                :ref="setFieldRef('fecha_simple')"
+                v-model="form.fecha_simple"
+                label="Fecha simple"
+                :required="true"
+            />
+
+            <MdTextarea
+                :ref="setFieldRef('comentarios')"
+                v-model="form.comentarios"
+                label="Comentarios"
+                :required="true"
+                :minLength="10"
+                :maxLength="30"
+                :uppercase="true"
+                counter
+            />
 
                 <v-btn type="submit" color="primary" block>
                     Probar validaciones
@@ -120,6 +134,8 @@ const form = reactive({
     comentarios: '',
     fecha_nacimiento: '',
     fecha_cita: [],
+    fecha_rango: [],
+    fecha_simple: '',
 });
 
 const data = ref({});
