@@ -178,6 +178,15 @@
                 placeholder="Escribe tus comentarios..."
             />
 
+            <MdPasswordInput
+                :ref="setFieldRef('password')"
+                v-model="form.password"
+                label="Contraseña"
+                :required="true"
+                :min-length="5"
+                security="strong"
+            />
+
                 <v-btn type="submit" color="primary" block>
                     Probar validaciones
                 </v-btn>
@@ -205,6 +214,7 @@ import MdSwitch from '@/Components/MaterialDesign/MdSwitch.vue';
 import MdCheckbox from '@/Components/MaterialDesign/MdCheckbox.vue';
 import MdRadioGroup from '@/Components/MaterialDesign/MdRadioGroup.vue';
 import MdFileInput from '@/Components/MaterialDesign/MdFileInput.vue';
+import MdPasswordInput from '@/Components/MaterialDesign/MdPasswordInput.vue';
 
 import MdRichText from '@/Components/MaterialDesign/MdRichTextArea.vue';
 
