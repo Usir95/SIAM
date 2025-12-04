@@ -139,6 +139,7 @@
                 ]"
                 :required="true"
                 color="orange-darken-3"
+                inline
             />
 
             <MdTextarea
@@ -152,6 +153,18 @@
                 counter
             />
 
+            <MdFileInput
+                :ref="setFieldRef('documentos')"
+                v-model="form.documentos"
+                label="Documentos"
+                multiple
+                chips
+                counter
+                counterString="archivos seleccionados"
+                accept=".pdf,image/*"
+                :required="true"
+                :maxSizeMB="2"
+            />
                 <v-btn type="submit" color="primary" block>
                     Probar validaciones
                 </v-btn>
@@ -177,7 +190,7 @@ import MdSelectSearch from '@/Components/MaterialDesign/MdSelectSearch.vue';
 import MdSwitch from '@/Components/MaterialDesign/MdSwitch.vue';
 import MdCheckbox from '@/Components/MaterialDesign/MdCheckbox.vue';
 import MdRadioGroup from '@/Components/MaterialDesign/MdRadioGroup.vue';
-
+import MdFileInput from '@/Components/MaterialDesign/MdFileInput.vue';
 
 import { useMdFormValidation } from '@/utils/FormValidation';
 import { reactive, ref, onMounted } from 'vue';
@@ -198,6 +211,7 @@ const form = reactive({
     activo: false,
     acepta_terminos: false,
     genero: '',
+    documentos: [],
 });
 
 const Frutas = ref([
