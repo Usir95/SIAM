@@ -165,6 +165,19 @@
                 :required="true"
                 :maxSizeMB="2"
             />
+
+            <MdRichText
+                :ref="setFieldRef('comentarios')"
+                v-model="form.comentarios"
+                label="Comentarios"
+                :required="true"
+                :minLength="10"
+                :maxLength="300"
+                toolbar="minimal"
+                helper="Entre 10 y 300 caracteres"
+                placeholder="Escribe tus comentarios..."
+            />
+
                 <v-btn type="submit" color="primary" block>
                     Probar validaciones
                 </v-btn>
@@ -180,6 +193,7 @@
 
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
+
 import MdTextInput from '@/Components/MaterialDesign/MdTextInput.vue';
 import MdNumberInput from '@/Components/MaterialDesign/MdNumberInput.vue';
 import MdTextarea from '@/Components/MaterialDesign/MdTextareaInput.vue';
@@ -191,6 +205,8 @@ import MdSwitch from '@/Components/MaterialDesign/MdSwitch.vue';
 import MdCheckbox from '@/Components/MaterialDesign/MdCheckbox.vue';
 import MdRadioGroup from '@/Components/MaterialDesign/MdRadioGroup.vue';
 import MdFileInput from '@/Components/MaterialDesign/MdFileInput.vue';
+
+import MdRichText from '@/Components/MaterialDesign/MdRichTextArea.vue';
 
 import { useMdFormValidation } from '@/utils/FormValidation';
 import { reactive, ref, onMounted } from 'vue';
@@ -212,6 +228,7 @@ const form = reactive({
     acepta_terminos: false,
     genero: '',
     documentos: [],
+    contenido_texto: '',
 });
 
 const Frutas = ref([
@@ -253,3 +270,32 @@ const handleSubmit = () => {
 onMounted(() => {
 });
 </script>
+
+<style scoped>
+.quill-comentarios .ql-toolbar.ql-snow {
+    border: 1px solid #d1d5db;
+    border-bottom: none;
+    border-top-left-radius: 0.375rem;
+    border-top-right-radius: 0.375rem;
+    padding: 4px 8px;
+}
+
+.quill-comentarios .ql-container.ql-snow {
+    border: 1px solid #d1d5db;
+    border-top: none;
+    border-bottom-left-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+}
+
+.quill-comentarios .ql-editor {
+    min-height: 120px;
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+}
+</style>
+
+
