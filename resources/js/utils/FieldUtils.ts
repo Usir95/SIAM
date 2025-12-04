@@ -3,7 +3,7 @@ export type AllowedType =
     | "number"
     | "decimal"
     | "negative"
-    | "negativeInt"   // 👈 NUEVO: enteros negativos
+    | "negativeInt"
     | "money"
     | "email"
     | "phone"

@@ -59,6 +59,33 @@
                     :required="true"
                 />
 
+            <MdDateInput
+                :ref="setFieldRef('fecha_nacimiento')"
+                v-model="form.fecha_nacimiento"
+                label="Fecha de nacimiento"
+                :required="true"
+            />
+            {{ form.fecha_nacimiento }}
+            <MdDateInput
+                :ref="setFieldRef('fecha_cita')"
+                v-model="form.fecha_cita"
+                label="Fecha de cita"
+                :range="true"
+                :required="true"
+            />
+
+            {{ form.fecha_cita }}
+                <MdTextarea
+                    :ref="setFieldRef('comentarios')"
+                    v-model="form.comentarios"
+                    label="Comentarios"
+                    :required="true"
+                    :minLength="10"
+                    :maxLength="30"
+                    :uppercase="true"
+                    counter
+                />
+
                 <v-btn type="submit" color="primary" block>
                     Probar validaciones
                 </v-btn>
@@ -76,9 +103,12 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import MdTextInput from '@/Components/MaterialDesign/MdTextInput.vue';
 import MdNumberInput from '@/Components/MaterialDesign/MdNumberInput.vue';
+import MdTextarea from '@/Components/MaterialDesign/MdTextareaInput.vue';
+import MdDateInput from '@/Components/MaterialDesign/MdDateInput.vue';
+import MdDatePicker from '@/Components/MaterialDesign/MdDatePicker.vue';
 
 import { useMdFormValidation } from '@/utils/FormValidation';
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 
 const form = reactive({
     nombre: '',
@@ -87,6 +117,9 @@ const form = reactive({
     edad: null,
     monto: null,
     saldo: null,
+    comentarios: '',
+    fecha_nacimiento: '',
+    fecha_cita: [],
 });
 
 const data = ref({});
@@ -103,4 +136,8 @@ const handleSubmit = () => {
     data.value = { ...form };
     console.log("Formulario válido:", data.value);
 };
+
+
+onMounted(() => {
+});
 </script>

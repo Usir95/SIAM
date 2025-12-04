@@ -5,12 +5,18 @@ import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import { mdi } from "vuetify/iconsets/mdi";
 
+// IMPORTAR EL LAB
+import { VDateInput } from "vuetify/labs/VDateInput";
+
 import DateFnsAdapter from "@date-io/date-fns";
 import enUS from "date-fns/locale/en-US";
 import es from "date-fns/locale/es";
 
 export const vuetify = createVuetify({
-    components,
+    components: {
+        ...components,
+        VDateInput,
+    },
     directives,
     icons: {
         defaultSet: "mdi",
