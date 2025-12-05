@@ -6,7 +6,6 @@
             <form @submit.prevent="handleSubmit" class="flex flex-row flex-wrap w-full gap-4">
 
                 <MdTextInput
-                    :ref="FieldRef"
                     v-model="form.nombre"
                     label="Nombre"
                     icon="mdi-account"
@@ -15,7 +14,6 @@
                 />
 
                 <MdTextInput
-                    :ref="FieldRef"
                     v-model="form.curp"
                     label="CURP"
                     icon="mdi-card-account-details"
@@ -28,7 +26,6 @@
                 />
 
                 <MdEmailInput
-                    :ref="FieldRef"
                     v-model="form.correo"
                     label="Correo electronico"
                     :required="true"
@@ -36,16 +33,13 @@
                 />
 
                 <MdPhoneInput
-                    :ref="FieldRef"
                     v-model="form.telefono"
                     label="Telefono"
                     :required="true"
                     helper="Incluye lada, ej: 2221234567"
                 />
 
-
                 <MdNumberInput
-                    :ref="FieldRef"
                     v-model="form.edad"
                     label="Edad"
                     :allowed="'number'"
@@ -55,9 +49,7 @@
                     :required="true"
                 />
 
-                <!-- Decimal / dinero -->
                 <MdNumberInput
-                    :ref="FieldRef"
                     v-model="form.monto"
                     label="Monto"
                     icon="mdi-currency-usd"
@@ -66,211 +58,185 @@
                     :required="true"
                 />
 
-                <!-- Negativo permitido -->
-
                 <MdNumberInput
-                    :ref="FieldRef"
                     v-model="form.saldo"
                     label="Saldo"
                     :allowNegative="true"
                     :required="true"
                 />
 
-            <MdDateInput
-                :ref="FieldRef"
-                v-model="form.fecha_nacimiento"
-                label="Fecha de nacimiento"
-                :required="true"
-            />
+                <MdDateInput
+                    v-model="form.fecha_nacimiento"
+                    label="Fecha de nacimiento"
+                    :required="true"
+                />
 
-            <MdDateInput
-                :ref="FieldRef"
-                v-model="form.fecha_cita"
-                label="Fecha de cita"
-                :range="true"
-                :required="true"
-            />
+                <MdDateInput
+                    v-model="form.fecha_cita"
+                    label="Fecha de cita"
+                    :range="true"
+                    :required="true"
+                />
 
-            <MdDatePicker
-                :ref="FieldRef"
-                v-model="form.fecha_rango"
-                label="Fecha de cita (rango)"
-                :range="true"
-                :required="true"
-            />
+                <MdDatePicker
+                    v-model="form.fecha_rango"
+                    label="Fecha de cita (rango)"
+                    :range="true"
+                    :required="true"
+                />
 
-            <MdDatePicker
-                :ref="FieldRef"
-                v-model="form.fecha_simple"
-                label="Fecha simple"
-                :required="true"
-            />
+                <MdDatePicker
+                    v-model="form.fecha_simple"
+                    label="Fecha simple"
+                    :required="true"
+                />
 
-            <MdSelect
-                :ref="FieldRef"
-                v-model="form.frutas_id"
-                label="Departamento"
-                :items="Frutas"
-                item-title="nombre"
-                item-value="id"
-                :required="true"
-            />
+                <MdSelect
+                    v-model="form.frutas_id"
+                    label="Departamento"
+                    :items="Frutas"
+                    item-title="nombre"
+                    item-value="id"
+                    :required="true"
+                />
 
-            <MdSelectSearch
-                :ref="FieldRef"
-                v-model="form.colores_id"
-                :items="Colores"
-                label="colores"
-                multiple
-                chips
-                item-title="nombre"
-                item-value="id"
-                :minSelected="2"
-                :maxSelected="3"
-                :required="true"
-            />
+                <MdSelectSearch
+                    v-model="form.colores_id"
+                    :items="Colores"
+                    label="colores"
+                    multiple
+                    chips
+                    item-title="nombre"
+                    item-value="id"
+                    :minSelected="2"
+                    :maxSelected="3"
+                    :required="true"
+                />
 
-            <MdCheckbox
-                :ref="FieldRef"
-                v-model="form.acepta_terminos"
-                label="Acepto términos y condiciones"
-                color="orange-darken-3"
-                :required="true"
-            />
+                <MdCheckbox
+                    v-model="form.acepta_terminos"
+                    label="Acepto términos y condiciones"
+                    color="orange-darken-3"
+                    :required="true"
+                />
 
-            <MdSwitch
-                :ref="FieldRef"
-                v-model="form.activo"
-                label="Activo"
-                color="indigo-darken-3"
-                :required="true"
-            />
+                <MdSwitch
+                    v-model="form.activo"
+                    label="Activo"
+                    color="indigo-darken-3"
+                    :required="true"
+                />
 
-            <MdRadioGroup
-                v-model="form.genero"
-                :ref="FieldRef"
-                label="Genero"
-                :items="[
-                    { value: 'H', label: 'Hombre' },
-                    { value: 'M', label: 'Mujer' }
-                ]"
-                :required="true"
-                color="orange-darken-3"
-                inline
-            />
+                <MdRadioGroup
+                    v-model="form.genero"
+                    label="Genero"
+                    :items="[
+                        { value: 'H', label: 'Hombre' },
+                        { value: 'M', label: 'Mujer' }
+                    ]"
+                    :required="true"
+                    color="orange-darken-3"
+                />
 
-            <MdTextarea
-                :ref="FieldRef"
-                v-model="form.texto"
-                label="Descripcion"
-                :required="true"
-                :minLength="10"
-                :maxLength="30"
-                :uppercase="true"
-                counter
-            />
+                <MdTextarea
+                    v-model="form.texto"
+                    label="Descripcion"
+                    :required="true"
+                    :minLength="10"
+                    :maxLength="30"
+                    :uppercase="true"
+                    counter
+                />
 
-            <MdFileInput
-                :ref="FieldRef"
-                v-model="form.documentos"
-                label="Documentos"
-                multiple
-                chips
-                counter
-                counterString="archivos seleccionados"
-                accept=".pdf,image/*"
-                :required="true"
-                :maxSizeMB="2"
-            />
+                <MdFileInput
+                    v-model="form.documentos"
+                    label="Documentos"
+                    multiple
+                    chips
+                    counter
+                    counterString="archivos seleccionados"
+                    accept=".pdf,image/*"
+                    :required="true"
+                    :maxSizeMB="2"
+                />
 
-            <MdRichText
-                :ref="FieldRef"
-                v-model="form.comentarios"
-                label="Comentarios"
-                :required="true"
-                :minLength="10"
-                :maxLength="300"
-                toolbar="minimal"
-                helper="Entre 10 y 300 caracteres"
-                placeholder="Escribe tus comentarios..."
-            />
+                <MdRichText
+                    v-model="form.comentarios"
+                    label="Comentarios"
+                    :required="true"
+                    :minLength="10"
+                    :maxLength="300"
+                    toolbar="minimal"
+                    helper="Entre 10 y 300 caracteres"
+                    placeholder="Escribe tus comentarios..."
+                />
 
-            <MdPasswordInput
-                :ref="FieldRef"
-                v-model="form.password"
-                label="Contraseña"
-                :required="true"
-                :min-length="5"
-                security="strong"
-            />
+                <MdPasswordInput
+                    v-model="form.password"
+                    label="Contraseña"
+                    :required="true"
+                    :minLength="5"
+                    security="strong"
+                />
 
-            <MdTimeInput
-                :ref="FieldRef"
-                v-model="form.hora_simple"
-                label="Hora simple"
-                :required="true"
-            />
+                <MdTimeInput
+                    v-model="form.hora_simple"
+                    label="Hora simple"
+                    :required="true"
+                />
 
-            <MdTimeInput
-                :ref="FieldRef"
-                v-model="form.hora_requerida"
-                label="Hora requerida"
-                :required="true"
-            />
+                <MdTimeInput
+                    v-model="form.hora_requerida"
+                    label="Hora requerida"
+                    :required="true"
+                />
 
-            <MdTimeInput
-                :ref="FieldRef"
-                v-model="form.hora_con_segundos"
-                label="Con segundos"
-                :required="true"
-                :use-seconds="true"
-            />
+                <MdTimeInput
+                    v-model="form.hora_con_segundos"
+                    label="Con segundos"
+                    :required="true"
+                    :use-seconds="true"
+                />
 
-            <MdToggle
-                :ref="FieldRef"
-                v-model="form.activo"
-                label="Activo?"
-                left-label="No"
-                right-label="Sí"
-                :left-value="false"
-                :right-value="true"
-                :required="true"
-            />
+                <MdToggle
+                    v-model="form.activo"
+                    label="Activo?"
+                    left-label="No"
+                    right-label="Sí"
+                    :left-value="false"
+                    :right-value="true"
+                    :required="true"
+                />
 
-            <MdSlider
-                v-model="form.volumen"
-                label="Volumen"
-                :min="0"
-                :max="100"
-                :step="1"
-                color="secondary"
-                :required="true"
-                :show-ticks="true"
-                thumb-label="always"
-            />
+                <MdSlider
+                    v-model="form.volumen"
+                    label="Volumen"
+                    :min="0"
+                    :max="100"
+                    :step="1"
+                    color="secondary"
+                    :required="true"
+                    :show-ticks="true"
+                    thumb-label="always"
+                />
 
-            <MdUploadArea
-                :ref="FieldRef"
-                v-model="form.archivos"
-                label="Documentos"
-                description="Sube contratos, identificaciones o comprobantes."
-                :required="true"
-                multiple
-                accept=".pdf,image/*"
-                :max-size-m-b="5"
-                :max-files="5"
-            />
+                <MdUploadArea
+                    v-model="form.archivos"
+                    label="Documentos"
+                    description="Sube contratos, identificaciones o comprobantes."
+                    :required="true"
+                    multiple
+                    accept=".pdf,image/*"
+                    :maxSizeMB="5"
+                    :maxFiles="5"
+                />
 
                 <v-btn type="submit" color="primary" block>
                     Probar validaciones
                 </v-btn>
-
             </form>
         </section>
 
-        <pre>
-            {{ data }}
-        </pre>
     </AppLayout>
 </template>
 
@@ -298,7 +264,9 @@ import MdPhoneInput from '@/Components/MaterialDesign/MdPhoneInput.vue';
 
 import MdRichText from '@/Components/MaterialDesign/MdRichTextArea.vue';
 
-import { useMdFormValidation } from '@/utils/FormValidation';
+// import { useMdFormValidation } from '@/utils/FormValidation';
+import { useProvideMdForm } from '@/utils/MdFormContext';
+
 import { reactive, ref, onMounted } from 'vue';
 
 const form = reactive({
@@ -350,50 +318,23 @@ const Colores = ref([
 ])
 
 const data = ref({});
-const { FieldRef, validateAll } = useMdFormValidation();
+const { validateAll } = useProvideMdForm();
 
 const handleSubmit = () => {
-    const allValid = validateAll();
+  const ok = validateAll();
 
-    if (!allValid) {
-        console.log("Formulario inválido");
-        return;
-    }
+  if (!ok) {
+    console.log('%cFORMULARIO INVALIDO', 'color: red; font-weight: bold;');
+    return;
+  }
 
-    data.value = { ...form };
-    console.log("Formulario válido:", data.value);
+  console.log('%cFORMULARIO VALIDO', 'color: green; font-weight: bold;');
+  console.log('Payload listo para enviar:', JSON.parse(JSON.stringify(form)));
 };
 
 
 onMounted(() => {
 });
 </script>
-
-<style scoped>
-.quill-comentarios .ql-toolbar.ql-snow {
-    border: 1px solid #d1d5db;
-    border-bottom: none;
-    border-top-left-radius: 0.375rem;
-    border-top-right-radius: 0.375rem;
-    padding: 4px 8px;
-}
-
-.quill-comentarios .ql-container.ql-snow {
-    border: 1px solid #d1d5db;
-    border-top: none;
-    border-bottom-left-radius: 0.375rem;
-    border-bottom-right-radius: 0.375rem;
-}
-
-.quill-comentarios .ql-editor {
-    min-height: 120px;
-    max-height: 220px;
-    overflow-y: auto;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    padding: 8px 12px;
-    font-size: 0.95rem;
-}
-</style>
 
 

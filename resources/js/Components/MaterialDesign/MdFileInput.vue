@@ -2,8 +2,11 @@
 <template>
     <div class="w-full">
         <v-file-input
+            ref="inputRef"
             v-model="innerValue"
             :label="label"
+            :id="id"
+            :name="name"
             :multiple="multiple"
             :accept="accept"
             :chips="chips"
@@ -29,7 +32,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import {
+    ref,
+    computed,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 type Density = 'default' | 'comfortable' | 'compact';
 type Variant =
@@ -44,6 +55,8 @@ type Variant =
 interface MdFileInputProps {
     modelValue?: File | File[] | null;
     label?: string;
+    id?: string;
+    name?: string;
     required?: boolean;
     multiple?: boolean;
     accept?: string;
@@ -65,6 +78,8 @@ interface MdFileInputProps {
 const props = withDefaults(defineProps<MdFileInputProps>(), {
     modelValue: null,
     label: '',
+    id: undefined,
+    name: undefined,
     required: false,
     multiple: false,
     accept: undefined,
@@ -83,11 +98,23 @@ const props = withDefaults(defineProps<MdFileInputProps>(), {
     maxSizeMB: null,
 });
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits<{
+    (e: 'update:modelValue', value: File | File[] | null): void;
+}>();
 
-const rawValue = ref(props.modelValue);
+const rawValue = ref<File | File[] | null>(props.modelValue);
 const errorMessage = ref('');
 const touched = ref(false);
+
+// ref al v-file-input para focus()
+const inputRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdFileInput_${props.id || instance?.uid || Math.random().toString(36)}`;
 
 watch(
     () => props.modelValue,
@@ -97,13 +124,15 @@ watch(
 
 const innerValue = computed({
     get: () => rawValue.value,
-    set: (v) => {
+    set: (v: File | File[] | null) => {
         rawValue.value = v;
         emit('update:modelValue', v);
-    }
+    },
 });
 
-const displayedError = computed(() => props.externalError || errorMessage.value);
+const displayedError = computed(
+    () => props.externalError || errorMessage.value
+);
 
 // ----------------------
 // VALIDAR FORMATO / MIME
@@ -111,7 +140,7 @@ const displayedError = computed(() => props.externalError || errorMessage.value)
 const isFileAllowed = (file: File): boolean => {
     if (!props.accept) return true;
 
-    const acceptList = props.accept.split(',').map(a => a.trim().toLowerCase());
+    const acceptList = props.accept.split(',').map((a) => a.trim().toLowerCase());
     const fileName = file.name.toLowerCase();
     const fileType = file.type.toLowerCase();
 
@@ -123,7 +152,9 @@ const isFileAllowed = (file: File): boolean => {
             const [type, subtype] = rule.split('/');
             const [fType, fSubtype] = fileType.split('/');
 
-            if (type === fType && (subtype === '*' || subtype === fSubtype)) return true;
+            if (type === fType && (subtype === '*' || subtype === fSubtype)) {
+                return true;
+            }
         }
     }
 
@@ -138,8 +169,7 @@ const validate = (): boolean => {
 
     const files = rawValue.value;
     const empty =
-        files == null ||
-        (Array.isArray(files) && files.length === 0);
+        files == null || (Array.isArray(files) && files.length === 0);
 
     if (props.required && empty) {
         errorMessage.value = 'Este campo es obligatorio';
@@ -180,6 +210,21 @@ const handleChange = () => {
     validate();
 };
 
+const focus = () => {
+    const comp = inputRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    const el: HTMLInputElement | null =
+        comp.$el?.querySelector?.('input[type="file"]') ?? null;
+
+    el?.focus();
+};
+
 const successClass = computed(() => {
     if (!props.showSuccessState) return '';
     if (!touched.value) return '';
@@ -187,7 +232,23 @@ const successClass = computed(() => {
     return 'md-input-success';
 });
 
-defineExpose({ validate });
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
+defineExpose({ validate, focus });
 </script>
 
 <style scoped>

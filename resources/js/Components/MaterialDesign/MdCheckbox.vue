@@ -3,6 +3,7 @@
     <div class="w-full max-w-xs" :style="successColorVar">
         <v-checkbox
             v-model="innerValue"
+            :id="id || name || undefined"
             :label="label"
             :readonly="readonly"
             :error="!!displayedError"
@@ -18,9 +19,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 interface MdCheckboxProps {
+    id?: string;
+    name?: string;
     modelValue?: boolean;
     label?: string;
     required?: boolean;
@@ -31,6 +35,8 @@ interface MdCheckboxProps {
 }
 
 const props = withDefaults(defineProps<MdCheckboxProps>(), {
+    id: '',
+    name: '',
     modelValue: false,
     label: '',
     required: false,
@@ -47,6 +53,8 @@ const emit = defineEmits<{
 const rawValue = ref<boolean>(props.modelValue);
 const errorMessage = ref('');
 const touched = ref(false);
+
+const formContext = useMdForm();
 
 // sincroniza cambios externos
 watch(
@@ -98,6 +106,24 @@ const successClass = computed(() => {
 
 const successColorVar = computed(() => {
     return props.color ? { '--md-checkbox-success-color': `var(--v-theme-${props.color})` } : {};
+});
+
+const fieldKey = computed(() => {
+    if (props.name) return props.name;
+    if (props.id) return props.id;
+    return '';
+});
+
+onMounted(() => {
+    if (formContext && fieldKey.value) {
+        formContext.registerField(fieldKey.value, { validate });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (formContext && fieldKey.value) {
+        formContext.unregisterField(fieldKey.value);
+    }
 });
 
 defineExpose({ validate });

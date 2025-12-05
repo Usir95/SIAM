@@ -10,9 +10,12 @@
             <!-- Activador: input con mismo diseño que MdTextInput/MdNumberInput -->
             <template #activator="{ props: menuProps }">
                 <v-text-field
+                    ref="inputRef"
                     v-bind="menuProps"
                     v-model="displayText"
                     :label="label"
+                    :id="id"
+                    :name="name"
                     :prepend-inner-icon="icon"
                     :density="density"
                     :variant="variant"
@@ -44,7 +47,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import {
+    computed,
+    ref,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 type Density = 'default' | 'comfortable' | 'compact';
 type Variant =
@@ -63,6 +74,8 @@ type ModelValue = SingleDate | MultiDate;
 
 interface MdDatePickerProps {
     modelValue?: ModelValue;
+    id?: string;
+    name?: string;
     label?: string;
     icon?: string;
     required?: boolean;
@@ -74,7 +87,6 @@ interface MdDatePickerProps {
     variant?: Variant;
     rounded?: boolean | string | number;
     clearable?: boolean;
-
     min?: string | null;
     max?: string | null;
     multiple?: boolean;
@@ -86,6 +98,8 @@ interface MdDatePickerProps {
 const props = withDefaults(defineProps<MdDatePickerProps>(), {
     modelValue: null,
     label: '',
+    id: undefined,
+    name: undefined,
     icon: 'mdi-calendar',
     required: false,
     helper: '',
@@ -114,6 +128,15 @@ const rawValue = ref<ModelValue>(
 );
 const errorMessage = ref('');
 const touched = ref(false);
+
+// ref al v-text-field para focus()
+const inputRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name || `MdDatePicker_${instance?.uid ?? Math.random().toString(36)}`;
 
 // Sincroniza cuando el padre cambia el modelValue
 watch(
@@ -149,7 +172,6 @@ const formatDate = (value: string | Date): string => {
     if (value instanceof Date) {
         d = value;
     } else {
-        // value es ISO yyyy-mm-dd o similar
         d = new Date(value);
     }
     if (Number.isNaN(d.getTime())) return '';
@@ -241,6 +263,22 @@ const handleSelect = (value: any) => {
     validate();
 };
 
+const focus = () => {
+    const comp = inputRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    const el: HTMLInputElement | null =
+        (comp.$el && comp.$el.querySelector && comp.$el.querySelector('input')) ||
+        null;
+
+    el?.focus();
+};
+
 const successClass = computed(() => {
     if (!props.showSuccessState) return '';
     if (!touched.value) return '';
@@ -248,8 +286,25 @@ const successClass = computed(() => {
     return 'md-input-success';
 });
 
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
 defineExpose({
     validate,
+    focus,
 });
 </script>
 

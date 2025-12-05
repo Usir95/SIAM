@@ -2,9 +2,12 @@
 <template>
     <div class="w-full max-w-xs">
         <v-autocomplete
+            ref="selectRef"
             v-model="innerValue"
             :items="items"
             :label="label"
+            :id="id"
+            :name="name"
             :item-title="itemTitle"
             :item-value="itemValue"
             :multiple="multiple"
@@ -29,7 +32,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import {
+    computed,
+    ref,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 type Density = 'default' | 'comfortable' | 'compact';
 type Variant =
@@ -49,6 +60,8 @@ type ModelValue  = SingleValue | MultiValue;
 interface MdSelectSearchProps {
     modelValue?: ModelValue;
     label?: string;
+    id?: string;
+    name?: string;
     items?: any[];
     itemTitle?: string;
     itemValue?: string;
@@ -72,6 +85,8 @@ interface MdSelectSearchProps {
 const props = withDefaults(defineProps<MdSelectSearchProps>(), {
     modelValue: null,
     label: '',
+    id: '',
+    name: '',
     items: () => [],
     itemTitle: 'label',
     itemValue: 'value',
@@ -96,9 +111,21 @@ const emit = defineEmits<{
     (e: 'update:modelValue', value: ModelValue): void;
 }>();
 
-const rawValue = ref<ModelValue>(props.modelValue ?? (props.multiple ? [] : null));
+const rawValue = ref<ModelValue>(
+    props.modelValue ?? (props.multiple ? [] : null)
+);
 const errorMessage = ref<string>('');
 const touched = ref(false);
+
+// ref al v-autocomplete para poder hacer focus()
+const selectRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdSelectSearch_${props.id || instance?.uid || Math.random().toString(36)}`;
 
 // sync externo
 watch(
@@ -161,7 +188,11 @@ const validate = (): boolean => {
     }
 
     if (props.required) {
-        if (v == null || v === '' || (typeof v === 'number' && Number.isNaN(v))) {
+        if (
+            v == null ||
+            v === '' ||
+            (typeof v === 'number' && Number.isNaN(v))
+        ) {
             errorMessage.value = 'Este campo es obligatorio';
             return false;
         }
@@ -177,9 +208,31 @@ const handleBlur = () => {
 
 const handleChange = () => {
     if (!touched.value) touched.value = true;
-    if (props.required || props.multiple || props.minSelected != null || props.maxSelected != null) {
+    if (
+        props.required ||
+        props.multiple ||
+        props.minSelected != null ||
+        props.maxSelected != null
+    ) {
         validate();
     }
+};
+
+const focus = () => {
+    const comp = selectRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    const el: HTMLInputElement | null =
+        comp.$el?.querySelector?.('input') ??
+        comp.$el?.querySelector?.('[role="combobox"]') ??
+        null;
+
+    el?.focus();
 };
 
 const successClass = computed<string>(() => {
@@ -189,8 +242,25 @@ const successClass = computed<string>(() => {
     return 'md-input-success';
 });
 
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
 defineExpose({
     validate,
+    focus,
 });
 </script>
 

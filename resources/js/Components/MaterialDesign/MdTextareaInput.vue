@@ -2,8 +2,11 @@
 <template>
     <div class="w-full">
         <v-textarea
+            ref="textareaRef"
             v-model="innerValue"
             :label="label"
+            :id="id"
+            :name="name"
             :prepend-inner-icon="icon"
             :density="density"
             :variant="variant"
@@ -28,13 +31,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import {
+    computed,
+    ref,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
 import {
     toUpper,
     isValidKey,
     sanitizeByType,
     type AllowedType,
 } from '@/utils/FieldUtils';
+import { useMdForm } from '@/utils/MdFormContext';
 
 type Density = 'default' | 'comfortable' | 'compact';
 type Variant =
@@ -50,6 +60,8 @@ type ModelValue = string | number | null | undefined;
 
 interface MdTextareaProps {
     modelValue?: ModelValue;
+    id?: string;
+    name?: string;
     label?: string;
     icon?: string;
     required?: boolean;
@@ -74,6 +86,8 @@ interface MdTextareaProps {
 
 const props = withDefaults(defineProps<MdTextareaProps>(), {
     modelValue: '',
+    id: undefined,
+    name: undefined,
     label: '',
     icon: '',
     required: false,
@@ -103,6 +117,16 @@ const emit = defineEmits<{
 const errorMessage = ref<string>('');
 const touched = ref(false);
 
+// ref al v-textarea para poder hacer focus()
+const textareaRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdTextarea_${props.id || instance?.uid || Math.random().toString(36)}`;
+
 // v-model interno
 const innerValue = computed<ModelValue>({
     get() {
@@ -117,7 +141,10 @@ const innerValue = computed<ModelValue>({
                 let s = newValue;
                 s = toUpper(s, props.uppercase ?? false);
 
-                if (typeof props.maxLength === 'number' && props.maxLength > 0) {
+                if (
+                    typeof props.maxLength === 'number' &&
+                    props.maxLength > 0
+                ) {
                     s = s.slice(0, props.maxLength);
                 }
 
@@ -213,8 +240,40 @@ const successClass = computed<string>(() => {
     return 'md-input-success';
 });
 
+const focus = () => {
+    const comp = textareaRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    const el: HTMLTextAreaElement | null =
+        comp.$el?.querySelector?.('textarea') ?? null;
+
+    el?.focus();
+};
+
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
 defineExpose({
     validate,
+    focus,
 });
 </script>
 

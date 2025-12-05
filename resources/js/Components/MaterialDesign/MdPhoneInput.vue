@@ -4,6 +4,8 @@
         ref="baseRef"
         :model-value="modelValue"
         :label="label"
+        :id="id"
+        :name="name"
         :icon="icon || 'mdi-phone-outline'"
         :type="'text'"
         :required="required"
@@ -27,8 +29,14 @@
 
 <script setup lang="ts">
 // @ts-nocheck
-import { ref } from 'vue';
+import {
+    ref,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
 import MdTextInput from '@/Components/MaterialDesign/MdTextInput.vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 type Density = 'default' | 'comfortable' | 'compact';
 type Variant =
@@ -59,6 +67,10 @@ interface MdPhoneInputProps {
     showSuccessState?: boolean;
     density?: Density;
     rounded?: boolean | string | number;
+
+    /** Nombre e ID para el input real */
+    name?: string;
+    id?: string;
 }
 
 const props = withDefaults(defineProps<MdPhoneInputProps>(), {
@@ -78,10 +90,11 @@ const props = withDefaults(defineProps<MdPhoneInputProps>(), {
     showSuccessState: true,
     density: 'compact',
     rounded: 'xl',
+    name: undefined,
+    id: undefined,
 });
 
-const defaultPattern: RegExp =
-    /^[0-9+\-\s]{10,20}$/;
+const defaultPattern: RegExp = /^[0-9+\-\s]{10,20}$/;
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: ModelValue): void;
@@ -89,13 +102,44 @@ const emit = defineEmits<{
 
 const baseRef = ref<InstanceType<typeof MdTextInput> | null>(null);
 
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+
+// Si el usuario no da "name", se genera uno automático
+const fieldKey =
+    props.name ||
+    `MdPhoneInput_${props.id || instance?.uid || Math.random().toString(36)}`;
+
 const onUpdate = (value: unknown) => {
     emit('update:modelValue', (value ?? '') as ModelValue);
 };
 
-const validate = (): boolean => {
-    return baseRef.value?.validate() ?? true;
+const validate = (): boolean => baseRef.value?.validate() ?? true;
+
+const focus = () => {
+    const comp = baseRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') return comp.focus();
+
+    const el: HTMLInputElement | null =
+        comp.$el?.querySelector?.('input') ?? null;
+
+    el?.focus();
 };
 
-defineExpose({ validate });
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, { validate, focus });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
+defineExpose({ validate, focus });
 </script>

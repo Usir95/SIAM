@@ -1,6 +1,11 @@
+<!-- resources/js/Components/MaterialDesign/MdUploadArea.vue -->
 <template>
     <div class="w-full">
-        <label v-if="label" class="block mb-1 text-sm font-medium text-gray-800">
+        <label
+            v-if="label"
+            class="block mb-1 text-sm font-medium text-gray-800"
+            :for="id || name"
+        >
             {{ label }}
             <span v-if="required" class="text-red-600">*</span>
         </label>
@@ -53,6 +58,8 @@
             class="hidden"
             :multiple="multiple"
             :accept="accept"
+            :name="name"
+            :id="id || name"
             @change="onFileChange"
         />
 
@@ -98,10 +105,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import {
+    ref,
+    computed,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 interface MdUploadAreaProps {
     modelValue?: File | File[] | null;
+    id?: string;
+    name?: string;
     label?: string;
     description?: string;
     required?: boolean;
@@ -116,6 +133,8 @@ interface MdUploadAreaProps {
 
 const props = withDefaults(defineProps<MdUploadAreaProps>(), {
     modelValue: null,
+    id: undefined,
+    name: undefined,
     label: '',
     description: '',
     required: false,
@@ -138,6 +157,13 @@ const errorMessage = ref('');
 const isDragging = ref(false);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdUploadArea_${props.id || instance?.uid || Math.random().toString(36)}`;
+
 watch(
     () => props.modelValue,
     (val) => {
@@ -159,7 +185,9 @@ const filesArray = computed<File[]>(() => {
     return Array.isArray(rawValue.value) ? rawValue.value : [rawValue.value];
 });
 
-const displayedError = computed(() => props.externalError || errorMessage.value);
+const displayedError = computed(
+    () => props.externalError || errorMessage.value
+);
 
 const acceptText = computed(() => {
     if (!props.accept) return '';
@@ -177,7 +205,12 @@ const dropzoneClasses = computed(() => {
 
     if (displayedError.value) {
         base.push('border-red-500 bg-red-50');
-    } else if (props.showSuccessState && touched.value && !displayedError.value && filesArray.value.length) {
+    } else if (
+        props.showSuccessState &&
+        touched.value &&
+        !displayedError.value &&
+        filesArray.value.length
+    ) {
         base.push('border-emerald-500 bg-emerald-50');
     }
 
@@ -188,7 +221,7 @@ const dropzoneClasses = computed(() => {
 const isFileAllowed = (file: File): boolean => {
     if (!props.accept) return true;
 
-    const acceptList = props.accept.split(',').map(a => a.trim().toLowerCase());
+    const acceptList = props.accept.split(',').map((a) => a.trim().toLowerCase());
     const fileName = file.name.toLowerCase();
     const fileType = (file.type || '').toLowerCase();
 
@@ -241,7 +274,12 @@ const validateFiles = (files: File[] | null): boolean => {
         }
     }
 
-    if (!empty && props.maxFiles && props.maxFiles > 0 && (files as File[]).length > props.maxFiles) {
+    if (
+        !empty &&
+        props.maxFiles &&
+        props.maxFiles > 0 &&
+        (files as File[]).length > props.maxFiles
+    ) {
         errorMessage.value = `Solo se permiten hasta ${props.maxFiles} archivos`;
         return false;
     }
@@ -297,7 +335,7 @@ const removeFile = (file: File) => {
         return;
     }
 
-    const remaining = rawValue.value.filter(f => f !== file);
+    const remaining = rawValue.value.filter((f) => f !== file);
     innerValue.value = remaining.length ? remaining : null;
     validateFiles(remaining.length ? remaining : null);
 };
@@ -311,12 +349,34 @@ const formatSize = (bytes: number): string => {
     return `${value.toFixed(1)} ${sizes[i]}`;
 };
 
-const fileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}`;
+const fileKey = (file: File) =>
+    `${file.name}-${file.size}-${file.lastModified}`;
 
 const validate = (): boolean => {
     const current = filesArray.value;
     return validateFiles(current.length ? current : null);
 };
 
-defineExpose({ validate });
+const focus = () => {
+    // No hay foco "natural" en la zona, usamos el input file
+    fileInputRef.value?.focus();
+};
+
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
+defineExpose({ validate, focus });
 </script>

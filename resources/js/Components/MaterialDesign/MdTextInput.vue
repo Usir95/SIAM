@@ -1,7 +1,8 @@
-<!-- MdTextInput.vue -->
+<!-- resources/js/Components/MaterialDesign/MdTextInput.vue -->
 <template>
     <div class="w-full max-w-xs">
         <v-text-field
+            ref="inputRef"
             v-model="innerValue"
             :label="label"
             :type="type"
@@ -26,13 +27,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import {
+    computed,
+    ref,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
 import {
     toUpper,
     isValidKey,
     sanitizeByType,
     type AllowedType,
 } from '@/utils/FieldUtils';
+import { useMdForm } from '@/utils/MdFormContext';
 
 // tipos que espera Vuetify
 type Density = 'default' | 'comfortable' | 'compact';
@@ -67,6 +75,9 @@ interface MdTextInputProps {
     showSuccessState?: boolean;
     density?: Density;
     rounded?: boolean | string | number;
+
+    /** Nombre/clave opcional para MdFormContext */
+    name?: string;
 }
 
 const props = withDefaults(defineProps<MdTextInputProps>(), {
@@ -89,6 +100,7 @@ const props = withDefaults(defineProps<MdTextInputProps>(), {
     showSuccessState: true,
     density: 'compact',
     rounded: 'xl',
+    name: undefined,
 });
 
 const emit = defineEmits<{
@@ -97,6 +109,15 @@ const emit = defineEmits<{
 
 const errorMessage = ref<string>('');
 const touched = ref(false);
+
+// ref interno al v-text-field para focus()
+const inputRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name || `MdTextInput_${instance?.uid ?? Math.random().toString(36)}`;
 
 // v-model interno
 const innerValue = computed<ModelValue>({
@@ -201,6 +222,22 @@ const handleKeydown = (e: KeyboardEvent) => {
     }
 };
 
+const focus = () => {
+    const comp = inputRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    const el: HTMLInputElement | null =
+        (comp.$el && comp.$el.querySelector && comp.$el.querySelector('input')) ||
+        null;
+
+    el?.focus();
+};
+
 const successClass = computed<string>(() => {
     if (!props.showSuccessState) return '';
     if (!touched.value) return '';
@@ -208,8 +245,25 @@ const successClass = computed<string>(() => {
     return 'md-input-success';
 });
 
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
 defineExpose({
     validate,
+    focus,
 });
 </script>
 

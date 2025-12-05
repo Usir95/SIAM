@@ -2,8 +2,11 @@
 <template>
     <div class="w-full max-w-xs" :style="successColorVar">
         <v-radio-group
+            ref="groupRef"
             v-model="innerValue"
             :label="label"
+            :id="id"
+            :name="name"
             :readonly="readonly"
             :error="!!displayedError"
             :error-messages="displayedError"
@@ -26,11 +29,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import {
+    ref,
+    computed,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 interface MdRadioGroupProps {
     modelValue?: string | number | boolean | null;
     label?: string;
+    id?: string;
+    name?: string;
     items?: Array<any>;
     itemTitle?: string;
     itemValue?: string;
@@ -44,6 +57,8 @@ interface MdRadioGroupProps {
 const props = withDefaults(defineProps<MdRadioGroupProps>(), {
     modelValue: null,
     label: '',
+    id: '',
+    name: '',
     items: () => [],
     itemTitle: 'label',
     itemValue: 'value',
@@ -62,6 +77,16 @@ const rawValue = ref(props.modelValue);
 const errorMessage = ref('');
 const touched = ref(false);
 
+// ref al v-radio-group para poder hacer focus()
+const groupRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdRadioGroup_${props.id || instance?.uid || Math.random().toString(36)}`;
+
 // Sincroniza cambios desde fuera
 watch(
     () => props.modelValue,
@@ -77,7 +102,9 @@ const innerValue = computed({
     },
 });
 
-const displayedError = computed(() => props.externalError || errorMessage.value);
+const displayedError = computed(
+    () => props.externalError || errorMessage.value
+);
 
 const validate = () => {
     if (props.readonly) {
@@ -87,7 +114,12 @@ const validate = () => {
 
     touched.value = true;
 
-    if (props.required && (rawValue.value === null || rawValue.value === undefined || rawValue.value === '')) {
+    if (
+        props.required &&
+        (rawValue.value === null ||
+            rawValue.value === undefined ||
+            rawValue.value === '')
+    ) {
         errorMessage.value = 'Debes seleccionar una opcion';
         return false;
     }
@@ -117,7 +149,39 @@ const successColorVar = computed(() => {
         : {};
 });
 
-defineExpose({ validate });
+const focus = () => {
+    const comp = groupRef.value as any;
+    if (!comp) return;
+
+    // Vuetify puede exponer focus en el grupo
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    const el: HTMLInputElement | null =
+        comp.$el?.querySelector?.('input[type="radio"]') ?? null;
+
+    el?.focus();
+};
+
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
+defineExpose({ validate, focus });
 </script>
 
 <style scoped>

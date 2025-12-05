@@ -2,8 +2,11 @@
 <template>
     <div class="w-full">
         <v-slider
+            ref="sliderRef"
             v-model="innerValue"
             :label="label"
+            :id="id"
+            :name="name"
             :min="min"
             :max="max"
             :step="step"
@@ -27,11 +30,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import {
+    computed,
+    ref,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 interface MdSliderProps {
     modelValue?: number | null;
     label?: string;
+    id?: string;
+    name?: string;
     required?: boolean;
     readonly?: boolean;
     disabled?: boolean;
@@ -51,6 +64,8 @@ interface MdSliderProps {
 const props = withDefaults(defineProps<MdSliderProps>(), {
     modelValue: null,
     label: '',
+    id: undefined,
+    name: undefined,
     required: false,
     readonly: false,
     disabled: false,
@@ -73,6 +88,16 @@ const emit = defineEmits<{
 const rawValue = ref<number | null>(props.modelValue);
 const innerValue = ref<number | null>(props.modelValue);
 const isDirty = ref(false);
+
+// ref al v-slider para focus()
+const sliderRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdSlider_${props.id || instance?.uid || Math.random().toString(36)}`;
 
 watch(
     () => props.modelValue,
@@ -105,7 +130,9 @@ const validationError = computed(() => {
     return '';
 });
 
-const displayedError = computed(() => (isDirty.value ? validationError.value : ''));
+const displayedError = computed(() =>
+    isDirty.value ? validationError.value : ''
+);
 
 const successClass = computed(() => {
     return props.showSuccessState && isDirty.value && !displayedError.value
@@ -123,4 +150,54 @@ const handleChange = (value: number | null) => {
     innerValue.value = value;
     emit('update:modelValue', value);
 };
+
+const validate = (): boolean => {
+    isDirty.value = true;
+    return validationError.value === '';
+};
+
+const focus = () => {
+    const comp = sliderRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    const el: HTMLInputElement | null =
+        comp.$el?.querySelector?.('input[type="range"]') ??
+        comp.$el?.querySelector?.('input') ??
+        null;
+
+    el?.focus();
+};
+
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
+defineExpose({
+    validate,
+    focus,
+});
 </script>
+
+<style scoped>
+
+.md-input-success :deep(.v-label) {
+    color: #16a34a !important;
+}
+</style>

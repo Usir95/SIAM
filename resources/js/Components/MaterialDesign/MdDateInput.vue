@@ -2,37 +2,42 @@
 <template>
     <div class="w-full max-w-xs">
         <v-date-input
+            ref="inputRef"
             v-model="innerValue"
+            :id="id || name || undefined"
             :label="label"
-
             :multiple="computedMultiple"
             :min="min"
             :max="max"
             :locale="locale"
-
             :variant="variant"
             :density="density"
             :rounded="rounded"
             hide-details="auto"
             :clearable="clearable"
-
             :hint="helper"
             :persistent-hint="!!helper"
             :readonly="readonly"
             :error="!!displayedError"
             :error-messages="displayedError"
             :class="successClass"
-
             :prepend-inner-icon="icon"
             prepend-icon=""
-
             @blur="handleBlur"
         />
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import {
+    computed,
+    ref,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 type Density = 'default' | 'comfortable' | 'compact';
 type Variant =
@@ -44,13 +49,15 @@ type Variant =
     | 'solo-inverted'
     | 'underlined';
 
-// IMPORTANTES: permitimos también Date / Date[]
+
 type SingleDate = string | Date | null;
 type MultiDate = (string | Date)[];
 type ModelValue = SingleDate | MultiDate;
 
 interface MdDateInputProps {
     modelValue?: ModelValue;
+    id?: string;
+    name?: string;
     label?: string;
     icon?: string;
     required?: boolean;
@@ -62,7 +69,6 @@ interface MdDateInputProps {
     variant?: Variant;
     rounded?: boolean | string | number;
     clearable?: boolean;
-
     min?: string | null;
     max?: string | null;
     multiple?: boolean;
@@ -71,6 +77,8 @@ interface MdDateInputProps {
 }
 
 const props = withDefaults(defineProps<MdDateInputProps>(), {
+    id: undefined,
+    name: undefined,
     modelValue: null,
     label: '',
     icon: 'mdi-calendar',
@@ -99,6 +107,15 @@ const rawValue = ref<ModelValue>(
 );
 const errorMessage = ref<string>('');
 const touched = ref(false);
+
+// ref interno al componente de Vuetify para poder hacer focus()
+const inputRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name || `MdDateInput_${instance?.uid ?? Math.random().toString(36)}`;
 
 // Sincroniza cuando el padre cambia modelValue
 watch(
@@ -172,6 +189,23 @@ const handleBlur = () => {
     validate();
 };
 
+const focus = () => {
+    const comp = inputRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    // fallback: buscar input interno
+    const el: HTMLInputElement | null =
+        (comp.$el && comp.$el.querySelector && comp.$el.querySelector('input')) ||
+        null;
+
+    el?.focus();
+};
+
 const successClass = computed<string>(() => {
     if (!props.showSuccessState) return '';
     if (!touched.value) return '';
@@ -179,8 +213,25 @@ const successClass = computed<string>(() => {
     return 'md-input-success';
 });
 
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
 defineExpose({
     validate,
+    focus,
 });
 </script>
 

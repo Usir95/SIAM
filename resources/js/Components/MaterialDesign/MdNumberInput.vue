@@ -1,9 +1,12 @@
-<!-- MdNumberInput.vue -->
+<!-- resources/js/Components/MaterialDesign/MdNumberInput.vue -->
 <template>
     <div class="w-full max-w-xs">
         <v-text-field
+            ref="inputRef"
             v-model="innerValue"
             :label="label"
+            :id="id"
+            :name="name"
             type="text"
             :prepend-inner-icon="icon"
             :density="density"
@@ -27,12 +30,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import {
+    computed,
+    ref,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
 import {
     isValidKey,
     sanitizeByType,
     type AllowedType,
 } from '@/utils/FieldUtils';
+import { useMdForm } from '@/utils/MdFormContext';
 
 type Density = 'default' | 'comfortable' | 'compact';
 type Variant =
@@ -44,11 +55,16 @@ type Variant =
     | 'solo-inverted'
     | 'underlined';
 
-type NumericAllowed = Extract<AllowedType, 'number' | 'decimal' | 'negative' | 'money'>;
+type NumericAllowed = Extract<
+    AllowedType,
+    'number' | 'decimal' | 'negative' | 'money'
+>;
 type ModelValue = number | null | undefined;
 
 interface MdNumberInputProps {
     modelValue?: ModelValue;
+    id?: string;
+    name?: string;
     label?: string;
     icon?: string;
     required?: boolean;
@@ -70,6 +86,8 @@ interface MdNumberInputProps {
 
 const props = withDefaults(defineProps<MdNumberInputProps>(), {
     modelValue: null,
+    id: undefined,
+    name: undefined,
     label: '',
     icon: '',
     required: false,
@@ -97,6 +115,16 @@ const rawValue = ref<string>(''); // texto que ve el usuario
 const errorMessage = ref<string>('');
 const touched = ref(false);
 
+// ref al v-text-field para poder hacer focus()
+const inputRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdNumberInput_${props.id || instance?.uid || Math.random().toString(36)}`;
+
 // Tipo efectivo que usaremos para teclas y sanitizado
 const numericType = computed<AllowedType>(() => {
     const base = props.allowed ?? 'decimal';
@@ -109,8 +137,8 @@ const numericType = computed<AllowedType>(() => {
     }
 
     // Solo positivos
-    if (base === 'money') return 'decimal'; // money se comporta como decimal
-    if (base === 'negative') return 'decimal'; // si alguien pone 'negative' pero no allowNegative, lo forzamos a decimal positivo
+    if (base === 'money') return 'decimal';
+    if (base === 'negative') return 'decimal';
     return base;
 });
 
@@ -213,6 +241,21 @@ const handleKeydown = (e: KeyboardEvent) => {
     }
 };
 
+const focus = () => {
+    const comp = inputRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    const el: HTMLInputElement | null =
+        comp.$el?.querySelector?.('input') ?? null;
+
+    el?.focus();
+};
+
 const successClass = computed<string>(() => {
     if (!props.showSuccessState) return '';
     if (!touched.value) return '';
@@ -229,11 +272,27 @@ watch(
     { immediate: true }
 );
 
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
 defineExpose({
     validate,
+    focus,
 });
 </script>
-
 
 <style scoped>
 .md-input-success :deep(.v-field__outline__start),

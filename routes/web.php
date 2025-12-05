@@ -19,3 +19,4 @@ Route::middleware([
 
 
 Route::resource('/Demo', DemoController::class)->names('Demo');
+Route::resource('/Example', DemoController::class)->names('Example');

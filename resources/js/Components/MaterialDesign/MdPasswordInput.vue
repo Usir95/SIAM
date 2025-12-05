@@ -1,9 +1,12 @@
-<!-- MdPasswordInput.vue -->
+<!-- resources/js/Components/MaterialDesign/MdPasswordInput.vue -->
 <template>
     <div class="w-full max-w-xs">
         <v-text-field
+            ref="inputRef"
             v-model="innerValue"
             :label="label"
+            :id="id"
+            :name="name"
             :type="inputType"
             :append-inner-icon="appendIcon"
             :density="density"
@@ -27,12 +30,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import {
+    computed,
+    ref,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
 import {
     isValidKey,
     sanitizeByType,
     type AllowedType,
 } from '@/utils/FieldUtils';
+import { useMdForm } from '@/utils/MdFormContext';
 
 type Density = 'default' | 'comfortable' | 'compact';
 type Variant =
@@ -52,6 +62,9 @@ type PasswordSecurity = 'simple' | 'basic' | 'strong' | 'strict';
 interface MdPasswordInputProps {
     modelValue?: ModelValue;
     label?: string;
+    icon?: string;
+    id?: string;
+    name?: string;
     required?: boolean;
     variant?: Variant;
     clearable?: boolean;
@@ -65,7 +78,7 @@ interface MdPasswordInputProps {
     showSuccessState?: boolean;
     density?: Density;
     rounded?: boolean | string | number;
-
+    security?: PasswordSecurity | null;
     /**
      * Nivel de seguridad de la contraseña (solo estructura):
      * - 'simple' : al menos 1 letra
@@ -73,14 +86,16 @@ interface MdPasswordInputProps {
      * - 'strong' : al menos 1 mayúscula, 1 minúscula y 1 número
      * - 'strict' : al menos 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial
      *
-     * Si es null, NO se valida estructura adicional (solo required / minLength / maxLength / pattern).
+     * Si es null, NO se valida estructura adicional.
      */
-    security?: PasswordSecurity | null;
+
 }
 
 const props = withDefaults(defineProps<MdPasswordInputProps>(), {
     modelValue: '',
     label: '',
+    id: undefined,
+    name: undefined,
     required: false,
     variant: 'outlined',
     clearable: false,
@@ -105,6 +120,16 @@ const errorMessage = ref<string>('');
 const touched = ref(false);
 const showPassword = ref(false);
 
+// ref al v-text-field para poder hacer focus()
+const inputRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdPasswordInput_${props.id || instance?.uid || Math.random().toString(36)}`;
+
 const inputType = computed(() => (showPassword.value ? 'text' : 'password'));
 const appendIcon = computed(() =>
     showPassword.value ? 'mdi-eye-off' : 'mdi-eye'
@@ -119,7 +144,6 @@ const innerValue = computed<ModelValue>({
         const type: AllowedType = 'password';
         let newValue: ModelValue = value;
 
-        // Sanitiza según tipo "password" (pero sin forzar mayúsculas)
         newValue = sanitizeByType(
             newValue,
             type,
@@ -203,7 +227,7 @@ const validate = (): boolean => {
         return true;
     }
 
-    // longitud (independiente de security)
+    // longitud
     if (props.minLength != null && length < props.minLength) {
         errorMessage.value = `Debe tener al menos ${props.minLength} caracteres`;
         return false;
@@ -263,6 +287,21 @@ const toggleVisibility = () => {
     showPassword.value = !showPassword.value;
 };
 
+const focus = () => {
+    const comp = inputRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    const el: HTMLInputElement | null =
+        comp.$el?.querySelector?.('input') ?? null;
+
+    el?.focus();
+};
+
 const successClass = computed<string>(() => {
     if (!props.showSuccessState) return '';
     if (!touched.value) return '';
@@ -270,8 +309,25 @@ const successClass = computed<string>(() => {
     return 'md-input-success';
 });
 
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
 defineExpose({
     validate,
+    focus,
 });
 </script>
 

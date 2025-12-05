@@ -10,9 +10,12 @@
         >
             <template #activator="{ props: activatorProps }">
                 <v-text-field
+                    ref="inputRef"
                     v-bind="activatorProps"
                     :model-value="displayValue"
                     :label="label"
+                    :id="id"
+                    :name="name"
                     :variant="variant"
                     :density="density"
                     :rounded="rounded"
@@ -50,7 +53,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import {
+    computed,
+    ref,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 type Density = 'default' | 'comfortable' | 'compact';
 type Variant =
@@ -69,6 +80,8 @@ type ModelValue = string | null;
 
 interface MdTimeInputProps {
     modelValue?: ModelValue;
+    id?: string;
+    name?: string;
     label?: string;
     icon?: string;
     required?: boolean;
@@ -80,13 +93,14 @@ interface MdTimeInputProps {
     variant?: Variant;
     rounded?: boolean | string | number;
     clearable?: boolean;
-
     format?: TimeFormat;
     useSeconds?: boolean;
 }
 
 const props = withDefaults(defineProps<MdTimeInputProps>(), {
     modelValue: null,
+    id: undefined,
+    name: undefined,
     label: '',
     icon: 'mdi-clock-time-four-outline',
     required: false,
@@ -111,6 +125,16 @@ const tempValue = ref<ModelValue>(props.modelValue ?? null);
 const menu = ref(false);
 const errorMessage = ref<string>('');
 const touched = ref(false);
+
+// ref al v-text-field activador para poder hacer focus()
+const inputRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdTimeInput_${props.id || instance?.uid || Math.random().toString(36)}`;
 
 // sync con el padre
 watch(
@@ -202,8 +226,40 @@ const successClass = computed<string>(() => {
     return 'md-input-success';
 });
 
+const focus = () => {
+    const comp = inputRef.value as any;
+    if (!comp) return;
+
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    const el: HTMLInputElement | null =
+        comp.$el?.querySelector?.('input') ?? null;
+
+    el?.focus();
+};
+
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
 defineExpose({
     validate,
+    focus,
 });
 </script>
 

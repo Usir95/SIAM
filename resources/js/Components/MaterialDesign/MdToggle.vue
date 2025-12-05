@@ -7,8 +7,11 @@
             </label>
 
             <v-btn-toggle
+                ref="toggleRef"
                 v-model="innerValue"
                 class="md-toggle-group"
+                :id="id"
+                :name="name"
                 :mandatory="true"
                 :rounded="rounded"
                 :disabled="readonly"
@@ -44,7 +47,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import {
+    computed,
+    ref,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 type Density = 'default' | 'comfortable' | 'compact';
 
@@ -52,13 +63,13 @@ type ToggleValue = string | number | boolean | null | undefined;
 
 interface MdToggleProps {
     modelValue?: ToggleValue;
+    id?: string;
+    name?: string;
     label?: string;
-
     leftLabel?: string;
     rightLabel?: string;
     leftValue?: ToggleValue;
     rightValue?: ToggleValue;
-
     required?: boolean;
     readonly?: boolean;
     helper?: string;
@@ -71,6 +82,8 @@ interface MdToggleProps {
 
 const props = withDefaults(defineProps<MdToggleProps>(), {
     modelValue: null,
+    id: undefined,
+    name: undefined,
     label: '',
     leftLabel: 'No',
     rightLabel: 'Sí',
@@ -94,6 +107,16 @@ const rawValue = ref<ToggleValue>(props.modelValue);
 const errorMessage = ref('');
 const touched = ref(false);
 
+// ref al v-btn-toggle para poder hacer focus()
+const toggleRef = ref<any | null>(null);
+
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdToggle_${props.id || instance?.uid || Math.random().toString(36)}`;
+
 // Sincronizar cambios externos
 watch(
     () => props.modelValue,
@@ -116,7 +139,9 @@ const innerValue = computed<ToggleValue>({
     },
 });
 
-const displayedError = computed(() => props.externalError || errorMessage.value);
+const displayedError = computed(
+    () => props.externalError || errorMessage.value
+);
 
 const isEmpty = (v: ToggleValue): boolean => {
     return v === null || v === undefined || v === '';
@@ -146,8 +171,42 @@ const successClass = computed(() => {
     return 'md-toggle-success';
 });
 
+const focus = () => {
+    const comp = toggleRef.value as any;
+    if (!comp) return;
+
+    // Si Vuetify expone focus()
+    if (typeof comp.focus === 'function') {
+        comp.focus();
+        return;
+    }
+
+    // Fallback: primer botón del toggle
+    const el: HTMLButtonElement | null =
+        comp.$el?.querySelector?.('button') ?? null;
+
+    el?.focus();
+};
+
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
 defineExpose({
     validate,
+    focus,
 });
 </script>
 
@@ -165,5 +224,4 @@ defineExpose({
 .md-toggle-success label {
     color: #16a34a !important;
 }
-
 </style>

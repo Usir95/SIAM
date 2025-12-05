@@ -1,8 +1,10 @@
+<!-- resources/js/Components/MaterialDesign/MdRichTextArea.vue-->
 <template>
     <div class="w-full mb-4">
         <label
             v-if="label"
             class="block mb-1 text-sm font-medium text-gray-700"
+            :for="id || name"
         >
             {{ label }}
             <span v-if="required" class="text-red-500">*</span>
@@ -28,6 +30,15 @@
             />
         </div>
 
+        <!-- input oculto para name/id en formularios nativos -->
+        <input
+            v-if="name"
+            type="hidden"
+            :name="name"
+            :id="id || name"
+            :value="plainText"
+        />
+
         <p v-if="helper" class="mt-1 text-xs text-gray-500">
             {{ helper }}
         </p>
@@ -41,7 +52,15 @@
 <script setup lang="ts">
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
-import { ref, computed, watch } from 'vue';
+import {
+    ref,
+    computed,
+    watch,
+    onMounted,
+    onBeforeUnmount,
+    getCurrentInstance,
+} from 'vue';
+import { useMdForm } from '@/utils/MdFormContext';
 
 /**
  * Opciones posibles para el toolbar de Quill (core):
@@ -133,6 +152,8 @@ type MdToolbarPreset = 'minimal' | 'essential' | 'full' | '';
 interface MdRichTextProps {
     modelValue?: string;
     label?: string;
+    id?: string;
+    name?: string;
     required?: boolean;
     minLength?: number;
     maxLength?: number;
@@ -147,6 +168,8 @@ interface MdRichTextProps {
 const props = withDefaults(defineProps<MdRichTextProps>(), {
     modelValue: '',
     label: '',
+    id: '',
+    name: '',
     required: false,
     minLength: 0,
     maxLength: 0,
@@ -158,14 +181,26 @@ const props = withDefaults(defineProps<MdRichTextProps>(), {
     toolbar: 'essential' as MdToolbarPreset,
 });
 
-const emit = defineEmits<{(e: 'update:modelValue', value: string): void; (e: 'blur'): void;}>();
+const emit = defineEmits<{
+    (e: 'update:modelValue', value: string): void;
+    (e: 'blur'): void;
+}>();
 
 const editorRef = ref<InstanceType<typeof QuillEditor> | null>(null);
 const innerValue = ref(props.modelValue ?? '');
 const internalError = ref<string>('');
 const touched = ref(false);
 
-watch(() => props.modelValue, (val) => {
+// MdFormContext
+const mdForm = useMdForm();
+const instance = getCurrentInstance();
+const fieldKey =
+    props.name ||
+    `MdRichText_${props.id || instance?.uid || Math.random().toString(36)}`;
+
+watch(
+    () => props.modelValue,
+    (val) => {
         if (val !== innerValue.value) {
             innerValue.value = val ?? '';
         }
@@ -191,7 +226,9 @@ const plainText = computed(() => {
 
 const hasValue = computed(() => plainText.value.length > 0);
 
-const displayedError = computed(() => props.externalError || internalError.value);
+const displayedError = computed(
+    () => props.externalError || internalError.value
+);
 
 const validate = () => {
     let error = '';
@@ -215,7 +252,6 @@ const handleBlur = () => {
     emit('blur');
 };
 
-
 const focus = () => {
     const q = (editorRef.value as any)?.getQuill?.();
     if (q && typeof q.focus === 'function') {
@@ -223,9 +259,25 @@ const focus = () => {
     }
 };
 
+// Registro automático en MdFormContext
+onMounted(() => {
+    if (mdForm) {
+        mdForm.registerField(fieldKey, {
+            validate,
+            focus,
+        });
+    }
+});
+
+onBeforeUnmount(() => {
+    if (mdForm) {
+        mdForm.unregisterField(fieldKey);
+    }
+});
+
 defineExpose({
     validate,
-    focus
+    focus,
 });
 </script>
 
