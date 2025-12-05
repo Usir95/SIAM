@@ -1,45 +1,49 @@
-<!-- resources/js/Components/MaterialDesign/MdUploadArea.vue -->
 <template>
     <div class="w-full">
-        <label v-if="label" class="block mb-1 text-sm font-medium text-gray-700">
+        <label v-if="label" class="block mb-1 text-sm font-medium text-gray-800">
             {{ label }}
             <span v-if="required" class="text-red-600">*</span>
         </label>
 
         <div
-            class="flex flex-col items-center justify-center px-4 py-6 transition border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-neutral-900"
+            class="flex flex-col items-center justify-center px-6 py-6 transition duration-150 ease-out bg-white border-2 border-dashed shadow-sm cursor-pointer rounded-2xl"
             :class="dropzoneClasses"
             @click="triggerSelect"
             @dragover.prevent="onDragOver"
             @dragleave.prevent="onDragLeave"
             @drop.prevent="onDrop"
         >
-            <div class="flex flex-col items-center gap-2">
-                <v-icon
-                    v-if="icon"
-                    :icon="icon"
-                    size="32"
-                    class="mb-1"
-                />
+            <div class="flex flex-col items-center max-w-md gap-2 text-center">
+                <!-- Icono redondo -->
+                <div class="flex items-center justify-center w-12 h-12 mb-1 bg-gray-100 rounded-full">
+                    <v-icon
+                        v-if="icon"
+                        :icon="icon"
+                        size="26"
+                        class="text-gray-500"
+                    />
+                </div>
 
-                <p class="text-sm font-medium text-gray-800 dark:text-gray-100">
+                <p class="text-sm font-semibold text-gray-800">
                     Arrastra y suelta archivos aqui
                 </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
+                <p class="text-xs text-gray-500">
                     O haz clic para seleccionarlos
                 </p>
 
-                <p v-if="acceptText" class="mt-1 text-xs text-gray-400">
-                    {{ acceptText }}
-                </p>
+                <div class="mt-2 space-y-1 text-[11px] leading-snug text-gray-500">
+                    <p v-if="acceptText">
+                        {{ acceptText }}
+                    </p>
 
-                <p v-if="maxSizeMB" class="mt-1 text-xs text-gray-400">
-                    Tamaño maximo por archivo: {{ maxSizeMB }} MB
-                </p>
+                    <p v-if="maxSizeMB">
+                        Tamaño maximo por archivo: {{ maxSizeMB }} MB
+                    </p>
 
-                <p v-if="maxFiles" class="text-xs text-gray-400">
-                    Maximo de archivos: {{ maxFiles }}
-                </p>
+                    <p v-if="maxFiles">
+                        Maximo de archivos: {{ maxFiles }}
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -57,12 +61,14 @@
             <div
                 v-for="file in filesArray"
                 :key="fileKey(file)"
-                class="flex items-center justify-between px-3 py-2 text-sm bg-white border border-gray-200 rounded-md dark:border-neutral-700 dark:bg-neutral-900"
+                class="flex items-center justify-between px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl"
             >
                 <div class="flex items-center gap-2">
-                    <v-icon icon="mdi-file-outline" size="20" class="text-gray-500" />
+                    <div class="flex items-center justify-center bg-gray-100 rounded-full w-7 h-7">
+                        <v-icon icon="mdi-file-outline" size="18" class="text-gray-500" />
+                    </div>
                     <div class="flex flex-col">
-                        <span class="font-medium text-gray-800 dark:text-gray-100">
+                        <span class="max-w-xs font-medium text-gray-800 truncate">
                             {{ file.name }}
                         </span>
                         <span class="text-xs text-gray-500">
@@ -73,7 +79,7 @@
 
                 <button
                     type="button"
-                    class="text-xs text-red-600 hover:underline"
+                    class="text-xs font-medium text-red-600 hover:text-red-700 hover:underline"
                     @click.stop="removeFile(file)"
                 >
                     Quitar
@@ -164,21 +170,21 @@ const dropzoneClasses = computed(() => {
     const base: string[] = [];
 
     if (isDragging.value) {
-        base.push('border-primary-500 bg-primary-50/60');
+        base.push('border-blue-400 bg-blue-50');
     } else {
-        base.push('border-gray-300 hover:border-primary-400');
+        base.push('border-gray-300 hover:border-blue-400 hover:bg-gray-50');
     }
 
     if (displayedError.value) {
-        base.push('border-red-500 bg-red-50/60');
+        base.push('border-red-500 bg-red-50');
     } else if (props.showSuccessState && touched.value && !displayedError.value && filesArray.value.length) {
-        base.push('border-green-500');
+        base.push('border-emerald-500 bg-emerald-50');
     }
 
     return base.join(' ');
 });
 
-// validation helpers
+// ----- validaciones -----
 const isFileAllowed = (file: File): boolean => {
     if (!props.accept) return true;
 

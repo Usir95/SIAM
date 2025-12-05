@@ -27,6 +27,23 @@
                     helper="18 caracteres, solo letras y números"
                 />
 
+                <MdEmailInput
+                    :ref="setFieldRef('correo')"
+                    v-model="form.correo"
+                    label="Correo electronico"
+                    :required="true"
+                    helper="helper de correo"
+                />
+
+                <MdPhoneInput
+                    :ref="setFieldRef('telefono')"
+                    v-model="form.telefono"
+                    label="Telefono"
+                    :required="true"
+                    helper="Incluye lada, ej: 2221234567"
+                />
+
+
                 <MdNumberInput
                     :ref="setFieldRef('edad')"
                     v-model="form.edad"
@@ -276,6 +293,8 @@ import MdTimeInput from '@/Components/MaterialDesign/MdTimeInput.vue';
 import MdToggle from '@/Components/MaterialDesign/MdToggle.vue';
 import MdSlider from '@/Components/MaterialDesign/MdSlider.vue';
 import MdUploadArea from '@/Components/MaterialDesign/MdUploadArea.vue';
+import MdEmailInput from '@/Components/MaterialDesign/MdEmailInput.vue';
+import MdPhoneInput from '@/Components/MaterialDesign/MdPhoneInput.vue';
 
 import MdRichText from '@/Components/MaterialDesign/MdRichTextArea.vue';
 
@@ -285,6 +304,7 @@ import { reactive, ref, onMounted } from 'vue';
 const form = reactive({
     nombre: '',
     correo: '',
+    telefono: '',
     curp: '',
     edad: null,
     monto: null,
